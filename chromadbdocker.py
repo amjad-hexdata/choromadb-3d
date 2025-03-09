@@ -1,17 +1,13 @@
 import os
-import glob
 from dotenv import load_dotenv
 from openai import OpenAI
 import chromadb
-from chromadb.config import Settings
-from chromadb.utils import embedding_functions
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain.schema import Document
 import PyPDF2
 import umap
 import numpy as np
 import plotly.express as px
-from sklearn.manifold import TSNE
+from datetime import datetime
 
 def extract_text_from_pdf(pdf_path):
     with open(pdf_path, "rb") as file:
@@ -24,11 +20,10 @@ def extract_text_from_pdf(pdf_path):
 pdf_path = "angroreport2022.pdf"
 text = extract_text_from_pdf(pdf_path)
 
-text_splitter = RecursiveCharacterTextSplitter(chunk_size=200, chunk_overlap=10)
+text_splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=100)
 chunks = text_splitter.create_documents([text])
 
 MODEL = "text-embedding-ada-002"
-db_name = "vector_db"
 
 load_dotenv()
 os.environ['OPENAI_API_KEY'] = os.getenv('OPENAI_API_KEY', 'your-key-if-not-using-env')
@@ -50,8 +45,7 @@ def get_openai_embedding(chunks):
 embeddings = get_openai_embedding(chunks)
 
 # Initialize ChromaDB client
-# client = chromadb.PersistentClient(path=db_name)
-chroma_client = chromadb.HttpClient(host="localhost", port = 8000)
+chroma_client = chromadb.HttpClient(host="localhost", port=8000)
 collection = chroma_client.get_or_create_collection(name="my_collection")
 print("Collection created or retrieved:", collection.name)
 
@@ -60,7 +54,14 @@ for i, (chunk, embedding) in enumerate(zip(chunks, embeddings)):
     collection.add(
         documents=[chunk.page_content],
         embeddings=[embedding.tolist()],
-        metadatas=[{"source": pdf_path}],
+         metadatas=[{
+            "source": pdf_path,
+            "chunk_index": i,
+            "page_number": (i * len(chunks) // 800 + 1),  # Approximate page number
+            "date_added": datetime.now().isoformat(),
+            "tags": "finance_annual_report,2022",
+            "section": "General"
+        }],
         ids=[f"doc_{i}"]
     )
 
