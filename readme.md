@@ -1,26 +1,26 @@
-# 3D Visualization of PDF Embeddings using ChromaDB and OpenAI
+# PDF Text Extractor and Embedding Visualizer
 
-This project demonstrates how to extract text from a PDF, generate embeddings using OpenAI, store them in ChromaDB, and visualize the embeddings in 3D using UMAP and Plotly.
+This project extracts text from a PDF file, generates embeddings using OpenAI, stores them in ChromaDB, and visualizes the embeddings in 3D using UMAP and Plotly.
 
 ## Table of Contents
-1. [Overview](#overview)
-2. [Features](#features)
-3. [Installation](#installation)
-4. [Usage](#usage)
-5. [Dependencies](#dependencies)
-6. [Contributing](#contributing)
-7. [License](#license)
+- [Overview](#overview)
+- [Features](#features)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Dependencies](#dependencies)
+- [Contributing](#contributing)
+- [License](#license)
 
 ---
 
 ## Overview
 The project performs the following steps:
 1. Extracts text from a PDF file.
-2. Splits the text into smaller chunks.
+2. Splits the text into chunks.
 3. Generates embeddings for each chunk using OpenAI's `text-embedding-ada-002` model.
-4. Stores the embeddings in a ChromaDB vector database.
+4. Stores the embeddings in a ChromaDB collection.
 5. Reduces the dimensionality of the embeddings to 3D using UMAP.
-6. Visualizes the 3D embeddings using Plotly.
+6. Visualizes the embeddings in an interactive 3D scatter plot using Plotly.
 
 ---
 
@@ -42,14 +42,14 @@ The project performs the following steps:
 ### Steps
 1. Clone the repository:
    ```bash
-   git clone https://github.com/amjad_hexdata/choromadb-3d.git
+   git clone https://github.com/amjad-hexdata/choromadb-3d.git
    cd your-repo-name
-   
-   
+
+  
    Contact
 For questions or feedback, please contact:
 
-Your Name
+Your Name: Muhammad Amjad
 
 Email: m.amjad@hexdata.co.jp
 
