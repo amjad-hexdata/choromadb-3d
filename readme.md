@@ -1,4 +1,4 @@
-# PDF Text Extractor and Embedding Visualizer
+# PDF to ChromaDB with 3D Visualization
 
 This project extracts text from a PDF file, generates embeddings using OpenAI, stores them in ChromaDB, and visualizes the embeddings in 3D using UMAP and Plotly.
 
@@ -43,7 +43,7 @@ The project performs the following steps:
 1. Clone the repository:
    ```bash
    git clone https://github.com/amjad-hexdata/choromadb-3d.git
-   cd your-repo-name
+   cd chromadb-3d
 
   
    Contact
