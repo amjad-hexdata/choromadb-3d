@@ -4,18 +4,19 @@ import umap
 import plotly.express as px
 from datetime import datetime
 import chromadb
-from chromadb.config import Settings
-from openai import OpenAI
-from dotenv import load_dotenv
 from PyPDF2 import PdfReader
+from sentence_transformers import SentenceTransformer
 import gradio as gr
+from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
 os.environ['OPENAI_API_KEY'] = os.getenv('OPENAI_API_KEY', 'your-key-if-not-using-env')
 
-# Initialize OpenAI and ChromaDB clients
-client_openai = OpenAI()
+# Initialize Hugging Face Embedding Model
+embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
+
+# Initialize ChromaDB Client
 chroma_client = chromadb.HttpClient(host="localhost", port=8000)
 collection = chroma_client.get_or_create_collection(name="HEXDATA-COLLECTION")
 
@@ -26,48 +27,46 @@ def extract_text_from_pdf(pdf_path):
         pages = [
             {"text": page.extract_text(), "page_number": i + 1}
             for i, page in enumerate(reader.pages)
+            if page.extract_text()  # Ensure non-empty text
         ]
     return pages
 
-# Function to get embeddings from OpenAI
-def get_openai_embedding(chunks):
-    embeddings = []
-    for chunk in chunks:
-        response = client_openai.embeddings.create(
-            input=chunk,
-            model="text-embedding-ada-002"
-        )
-        embeddings.append(response.data[0].embedding)
-    return np.array(embeddings)
+# Function to get embeddings using Hugging Face
+def get_huggingface_embedding(chunks):
+    return embedding_model.encode(chunks).tolist()  # Convert to list
 
 # Process PDF and store in ChromaDB
 def process_pdf(pdf_path):
     pages = extract_text_from_pdf(pdf_path)
 
-    # Create chunks based on each page to preserve page number
-    chunks = [page["text"] for page in pages if page["text"]]
+    if not pages:
+        return "No valid text found in the PDF."
+
+    # Extract text from pages
+    chunks = [page["text"] for page in pages]
 
     # Generate embeddings
-    embeddings = get_openai_embedding(chunks)
+    embeddings = get_huggingface_embedding(chunks)
 
-    # Add data to ChromaDB with actual page numbers
+    # Add data to ChromaDB with metadata
     for i, (chunk, embedding) in enumerate(zip(chunks, embeddings)):
         collection.add(
             documents=[chunk],
-            embeddings=[embedding.tolist()],
+            embeddings=[embedding],  # Directly store embedding
             metadatas=[{
                 "source": pdf_path,
                 "chunk_index": i,
                 "page_number": pages[i]['page_number'],
                 "date_added": datetime.now().isoformat(),
                 "tags": "finance_annual_report,2022",
-                "section": "General"}],
-            ids=[f"doc_{i}"]
+                "section": "General"
+            }],
+            ids=[f"doc_{pdf_path}_page_{i}"]
         )
 
-    # Reduce dimensions using UMAP
+    # Reduce dimensions using UMAP for visualization
     reducer = umap.UMAP(n_components=3)
-    embeddings_3d = reducer.fit_transform(embeddings)
+    embeddings_3d = reducer.fit_transform(np.array(embeddings))
 
     # Generate random colors
     colors = np.random.randint(0, 10, len(embeddings_3d))
